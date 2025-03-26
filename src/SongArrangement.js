@@ -1,4 +1,4 @@
-// 🔄 Updated SongArrangement.js with scrollable cue sheet preview
+// 🔄 SongArrangement.js with fixed function declarations for Netlify/ESLint
 import React, { useState } from "react";
 import CueSelector from "./components/CueSelector";
 import SongPartSelector from "./components/SongPartSelector";
@@ -111,81 +111,84 @@ const SongArrangement = () => {
 
     return (
         <div className="p-6 max-w-7xl mx-auto pb-32">
-            {cueSheets.map((sheet, index) => (
-                <div key={index} className="mb-10">
-                    <h1 className="text-2xl font-bold mb-4">Cue Sheet #{index + 1}</h1>
+            {cueSheets.map((sheet, index) => {
+                const handleSelectPart = (part) => {
+                    updateCueSheet(index, (s) => {
+                        if (!s.data[part]) {
+                            s.data[part] = [[]];
+                            s.history.push({ type: "add-part", part });
+                        }
+                        s.activePart = part;
+                        return s;
+                    });
+                };
 
-                    {/* Song Title & BPM */}
-                    <div className="flex flex-col md:flex-row gap-4 mb-6">
-                        <div className="flex-1">
-                            <label className="block font-medium mb-1">🎵 Song Title</label>
-                            <input
-                                type="text"
-                                value={sheet.title}
-                                onChange={(e) =>
-                                    updateCueSheet(index, (s) => ({ ...s, title: e.target.value }))
-                                }
-                                placeholder="e.g. Great Are You Lord"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                            />
+                const handleCueClick = (cue) => {
+                    handleAddCue(index, cue);
+                };
+
+                return (
+                    <div key={index} className="mb-10">
+                        <h1 className="text-2xl font-bold mb-4">Cue Sheet #{index + 1}</h1>
+
+                        <div className="flex flex-col md:flex-row gap-4 mb-6">
+                            <div className="flex-1">
+                                <label className="block font-medium mb-1">🎵 Song Title</label>
+                                <input
+                                    type="text"
+                                    value={sheet.title}
+                                    onChange={(e) =>
+                                        updateCueSheet(index, (s) => ({ ...s, title: e.target.value }))
+                                    }
+                                    placeholder="e.g. Great Are You Lord"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                                />
+                            </div>
+                            <div style={{ width: "120px" }}>
+                                <label className="block font-medium mb-1">🎚️ BPM</label>
+                                <input
+                                    type="number"
+                                    value={sheet.bpm}
+                                    onChange={(e) =>
+                                        updateCueSheet(index, (s) => ({ ...s, bpm: e.target.value }))
+                                    }
+                                    placeholder="e.g. 72"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                                />
+                            </div>
                         </div>
-                        <div style={{ width: "120px" }}>
-                            <label className="block font-medium mb-1">🎚️ BPM</label>
-                            <input
-                                type="number"
-                                value={sheet.bpm}
-                                onChange={(e) =>
-                                    updateCueSheet(index, (s) => ({ ...s, bpm: e.target.value }))
-                                }
-                                placeholder="e.g. 72"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                            />
+
+                        <div className="flex flex-col md:flex-row gap-6">
+                            <div className="md:w-1/2">
+                                {index === cueSheets.length - 1 && (
+                                    <>
+                                        <SongPartSelector
+                                            activePart={sheet.activePart}
+                                            onSelectPart={handleSelectPart}
+                                        />
+                                        <CueSelector onCueSelect={handleCueClick} />
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="md:w-1/2 max-h-[400px] overflow-y-auto pr-2">
+                                <h2 className="text-lg font-semibold mb-2">📋 Cue Sheet:</h2>
+                                {Object.entries(sheet.data).map(([part, lines]) => (
+                                    <div key={part} className="mb-4">
+                                        <h3 className="font-bold text-md mb-1">{part}</h3>
+                                        {lines.map((line, idx) => (
+                                            <p key={idx} className="text-sm text-gray-800 ml-2">
+                                                {line.length > 0 ? `- ${line.join(", ")}` : ""}
+                                            </p>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
+                );
+            })}
 
-                    {/* Two-column layout */}
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* Left column: Part + Cue selector */}
-                        <div className="md:w-1/2">
-                            {index === cueSheets.length - 1 && (
-                                <>
-                                    <SongPartSelector
-                                        activePart={sheet.activePart}
-                                        onSelectPart={(part) =>
-                                            updateCueSheet(index, (s) => {
-                                                if (!s.data[part]) {
-                                                    s.data[part] = [[]];
-                                                    s.history.push({ type: "add-part", part });
-                                                }
-                                                s.activePart = part;
-                                                return s;
-                                            })
-                                        }
-                                    />
-                                    <CueSelector onCueSelect={(cue) => handleAddCue(index, cue)} />
-                                </>
-                            )}
-                        </div>
-
-                        {/* Right column: Cue Sheet Preview */}
-                        <div className="md:w-1/2 max-h-[400px] overflow-y-auto pr-2">
-                            <h2 className="text-lg font-semibold mb-2">📋 Cue Sheet:</h2>
-                            {Object.entries(sheet.data).map(([part, lines]) => (
-                                <div key={part} className="mb-4">
-                                    <h3 className="font-bold text-md mb-1">{part}</h3>
-                                    {lines.map((line, idx) => (
-                                        <p key={idx} className="text-sm text-gray-800 ml-2">
-                                            {line.length > 0 ? `- ${line.join(", ")}` : ""}
-                                        </p>
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            ))}
-
-            {/* Action Bar */}
             <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow p-4 flex flex-wrap justify-center gap-4 z-50">
                 <button
                     onClick={() => handleUndo(cueSheets.length - 1)}
