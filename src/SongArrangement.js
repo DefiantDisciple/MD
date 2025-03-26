@@ -84,21 +84,26 @@ const SongArrangement = () => {
     };
 
     const handleExport = () => {
-        let content = cueSheets
-            .map((sheet, index) => {
-                let block = `Song ${index + 1}\nTitle: ${sheet.title}\nBPM: ${sheet.bpm}\n\n`;
-                for (const [part, lines] of Object.entries(sheet.data)) {
-                    block += `**${part}**\n`;
-                    lines.forEach((line) => {
-                        if (line.length > 0) {
-                            block += `- ${line.join(", ")}\n`;
-                        }
-                    });
-                    block += `\n`;
+        let content = "";
+
+        for (let i = 0; i < cueSheets.length; i++) {
+            const sheet = cueSheets[i];
+            content += `Song ${i + 1}\nTitle: ${sheet.title}\nBPM: ${sheet.bpm}\n\n`;
+
+            for (const [part, lines] of Object.entries(sheet.data)) {
+                content += `**${part}**\n`;
+                for (const line of lines) {
+                    if (line.length > 0) {
+                        content += `- ${line.join(", ")}\n`;
+                    }
                 }
-                return block;
-            })
-            .join("\n--------------------------\n\n");
+                content += "\n";
+            }
+
+            if (i !== cueSheets.length - 1) {
+                content += "\n--------------------------\n\n";
+            }
+        }
 
         const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
         const url = URL.createObjectURL(blob);
@@ -108,6 +113,7 @@ const SongArrangement = () => {
         link.click();
         URL.revokeObjectURL(url);
     };
+
 
     return (
         <div className="p-6 max-w-7xl mx-auto pb-32">
